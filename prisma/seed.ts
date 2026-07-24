@@ -22,7 +22,10 @@ const BCRYPT_ROUNDS = 12;
 
 async function seedAdminUser() {
   const email = process.env.SEED_ADMIN_EMAIL?.trim().toLowerCase();
-  const password = process.env.SEED_ADMIN_PASSWORD;
+  // Trimmed to match `loginSchema`, which also trims. A .env value can easily
+  // carry a trailing space; without this the seeded hash would cover a
+  // password the login form can no longer produce.
+  const password = process.env.SEED_ADMIN_PASSWORD?.trim();
 
   if (!email || !password) {
     throw new Error(
