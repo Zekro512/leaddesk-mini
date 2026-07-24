@@ -1,6 +1,28 @@
 import type { NextAuthConfig } from "next-auth";
 
 /**
+ * Strip stray whitespace from the auth environment variables.
+ *
+ * Pasting a value into a hosting dashboard routinely drags in a leading tab or
+ * a trailing newline. Auth.js reads NEXTAUTH_URL / AUTH_URL straight out of
+ * `process.env` itself, so the only place to intercept that is here, before
+ * the config below is constructed. The failure it prevents is a nasty one:
+ * the app boots fine and only post-login redirects break, pointing at a
+ * malformed origin.
+ */
+for (const key of [
+  "NEXTAUTH_URL",
+  "AUTH_URL",
+  "NEXTAUTH_SECRET",
+  "AUTH_SECRET",
+] as const) {
+  const value = process.env[key];
+  if (value && value !== value.trim()) {
+    process.env[key] = value.trim();
+  }
+}
+
+/**
  * Provider-free half of the Auth.js configuration.
  *
  * `proxy.ts` needs to *verify* a session on every matched request, but it must
