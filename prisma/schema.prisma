@@ -1,0 +1,65 @@
+// LeadDesk Mini — Prisma schema
+//
+// Two tables only: the leads captured from the public landing page, and the
+// admin accounts that can read/manage them.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  // Pooled connection (Supabase pgbouncer, port 6543) — used by the app at
+  // runtime so serverless functions don't exhaust Postgres connections.
+  url       = env("DATABASE_URL")
+  // Direct connection (port 5432) — used only by `prisma migrate` / `db push`,
+  // which need a session-mode connection that pgbouncer can't provide.
+  directUrl = env("DIRECT_URL")
+}
+
+/// Lifecycle of a lead as an admin works through the inbox.
+/// Modelled as an enum (not a free string) so the database itself rejects
+/// invalid values and the generated TypeScript type is a closed union.
+enum LeadStatus {
+  NEW
+  CONTACTED
+  CLOSED
+}
+
+/// Self-reported budget bracket. An enum keeps the reporting buckets stable —
+/// if this were a free string, "5k-20k" and "5K–20K" would become two buckets.
+enum BudgetRange {
+  UNDER_1K // "<1k"
+  FROM_1K_TO_5K // "1k-5k"
+  FROM_5K_TO_20K // "5k-20k"
+  OVER_20K // "20k+"
+}
+
+model Lead {
+  id          String      @id @default(uuid())
+  name        String
+  email       String
+  budgetRange BudgetRange
+  message     String      @db.Text
+  status      LeadStatus  @default(NEW)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  // Admin list view filters by status and searches by email, so both get an
+  // index. createdAt is indexed because the default sort is newest-first —
+  // without it Postgres sorts the whole table on every page load.
+  @@index([status])
+  @@index([email])
+  @@index([createdAt])
+  @@map("leads")
+}
+
+model AdminUser {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  /// bcrypt hash — plaintext passwords are never written to this column.
+  passwordHash String
+  createdAt    DateTime @default(now())
+
+  @@map("admin_users")
+}

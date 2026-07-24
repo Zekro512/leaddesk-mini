@@ -1,0 +1,41 @@
+@import "tailwindcss";
+
+/*
+  A single, deliberate light theme. The scaffold's `prefers-color-scheme` block
+  was removed: it only restyled the page background, which left every surface
+  built below (white cards, slate borders) unreadable on a dark OS setting.
+  One well-tested theme beats two half-finished ones.
+*/
+@theme {
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  /* Brand ramp — indigo, used for primary actions and accents. */
+  --color-brand-50: #eef2ff;
+  --color-brand-100: #e0e7ff;
+  --color-brand-200: #c7d2fe;
+  --color-brand-500: #6366f1;
+  --color-brand-600: #4f46e5;
+  --color-brand-700: #4338ca;
+  --color-brand-900: #312e81;
+}
+
+html {
+  color-scheme: light;
+}
+
+body {
+  background-color: #ffffff;
+  color: #0f172a; /* slate-900 */
+}
+
+/*
+  Consistent focus treatment for every interactive element. Keyboard users get
+  a clearly visible ring; mouse users don't see it on click.
+*/
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--color-brand-600);
+    outline-offset: 2px;
+  }
+}
